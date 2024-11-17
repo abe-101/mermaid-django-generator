@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mermaid to Django Models Converter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #4338CA;
+            --secondary: #6B7280;
+            --success: #059669;
+            --danger: #DC2626;
+            --background: #F9FAFB;
+            --card: #FFFFFF;
+            --border: #E5E7EB;
+            --text: #1F2937;
+            --text-secondary: #6B7280;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.5;
+            padding: 1rem;
+        }
+
+        .header {
+            max-width: 1200px;
+            margin: 0 auto 2rem;
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+
+        .header h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 2rem;
+            padding: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .card-body {
+            padding: 1.25rem;
+            flex: 1;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            resize: vertical;
+            background-color: #FAFAFA;
+            color: var(--text);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .preview, .output {
+            flex: 1;
+            overflow: auto;
+            background-color: #FAFAFA;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .preview {
+            padding: 1rem;
+        }
+
+        .output pre {
+            padding: 1rem;
+            margin: 0;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 150ms ease;
+            gap: 0.5rem;
+        }
+
+        .button-primary {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+        }
+
+        .button-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .button-secondary {
+            background-color: white;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .button-secondary:hover {
+            background-color: var(--background);
+        }
+
+        .copy-button {
+            background: transparent;
+            border: none;
+            color: var(--secondary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            transition: all 150ms ease;
+        }
+
+        .copy-button:hover {
+            background-color: var(--background);
+            color: var(--text);
+        }
+
+        .error {
+            color: var(--danger);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background-color: #FEE2E2;
+            border: 1px solid #FCA5A5;
+            margin-top: 1rem;
+        }
+
+        .success {
+            color: var(--success);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background-color: #ECFDF5;
+            border: 1px solid #6EE7B7;
+            margin-top: 1rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background-color: #EEF2FF;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Mermaid to Django Models</h1>
+        <p>Transform your ER diagrams into production-ready Django models</p>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2>Input Diagram</h2>
+                <span class="badge">Mermaid Syntax</span>
+            </div>
+            <div class="card-body">
+                <textarea id="input" placeholder="Paste your Mermaid ER diagram here...">erDiagram
+    Product {
+        int id PK
+        string name
+        decimal price
+        text description
+        boolean is_active
+        type status
+        timestamp created_at
+        int category_id FK
+    }
+    Category {
+        int id PK
+        string name
+        timestamp updated_at
+    }
+    Product }|--|| Category : belongs_to</textarea>
+                <div class="button-group">
+                    <button onclick="convert()" class="button button-primary">
+                        Convert to Django Models
+                    </button>
+                    <button class="button button-secondary" onclick="clearInput()">
+                        Clear
+                    </button>
+                </div>
+                <div id="preview" class="preview"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Django Models</h2>
+                <button class="copy-button" onclick="copyToClipboard()">
+                    Copy code
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="output" class="output"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+    // Initialize mermaid with custom theme
+mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    er: {
+        useMaxWidth: true,
+        titleTopMargin: 25,
+        diagramPadding: 20,
+    }
+});
+
+// Utility to show notifications
+function showNotification(message, type = 'success') {
+    const existingNotification = document.querySelector('.notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    notification.style.position = 'fixed';
+    notification.style.top = '1rem';
+    notification.style.right = '1rem';
+    notification.style.padding = '1rem';
+    notification.style.borderRadius = '0.5rem';
+    notification.style.animation = 'fadeIn 0.3s ease';
+    
+    if (type === 'success') {
+        notification.style.backgroundColor = '#ECFDF5';
+        notification.style.color = '#059669';
+    } else {
+        notification.style.backgroundColor = '#FEE2E2';
+        notification.style.color = '#DC2626';
+    }
+
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+}
+
+// Initialize the editor with syntax highlighting
+function initializeEditor() {
+    const textarea = document.getElementById('input');
+    let timeoutId;
+    
+    textarea.addEventListener('input', () => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(updatePreview, 500);
+    });
+
+    // Initial preview
+    updatePreview();
+}
+
+// Update the Mermaid diagram preview
+async function updatePreview() {
+    const input = document.getElementById('input').value;
+    const preview = document.getElementById('preview');
+    
+    try {
+        preview.innerHTML = '<div class="mermaid">' + input + '</div>';
+        await mermaid.run();
+    } catch (error) {
+        preview.innerHTML = `<div class="error">Error in diagram syntax: ${error.message}</div>`;
+    }
+}
+
+// Convert Mermaid to Django models
+async function convert() {
+    const input = document.getElementById('input').value;
+    const output = document.getElementById('output');
+
+    try {
+        // Parse the Mermaid syntax
+        const lines = input.split('\n');
+        let currentEntity = null;
+        let entities = {};
+        let relationships = [];
+
+        // Reset error state
+        output.classList.remove('error');
+
+        for (const line of lines) {
+            const trimmedLine = line.trim();
+            
+            // Match entity definitions
+            const entityMatch = trimmedLine.match(/^\s*(\w+)\s*{/);
+            if (entityMatch) {
+                currentEntity = entityMatch[1];
+                entities[currentEntity] = [];
+                continue;
+            }
+
+            // Match field definitions
+            if (currentEntity && trimmedLine.match(/^\s*\w+/)) {
+                const fieldMatch = trimmedLine.match(/^\s*(\w+)\s+(\w+)(?:\s+(PK|FK))?/);
+                if (fieldMatch) {
+                    entities[currentEntity].push({
+                        type: fieldMatch[1],
+                        name: fieldMatch[2],
+                        key: fieldMatch[3]
+                    });
+                }
+            }
+
+            // Match relationships
+            const relationshipMatch = trimmedLine.match(/(\w+)\s*[}|]\|--\|\|?\s*(\w+)/);
+            if (relationshipMatch) {
+                relationships.push({
+                    from: relationshipMatch[1],
+                    to: relationshipMatch[2],
+                    type: trimmedLine.includes('}|--||') ? 'many_to_one' : 'one_to_one'
+                });
+            }
+        }
+
+        // Generate Django models
+        let djangoModels = ['from django.db import models\n'];
+        
+        // Generate choices for type fields
+        const typeChoices = new Set();
+        for (const [entityName, fields] of Object.entries(entities)) {
+            fields.forEach(field => {
+                if (field.type.toLowerCase() === 'type') {
+                    typeChoices.add(field.name.toUpperCase());
+                }
+            });
+        }
+        
+        if (typeChoices.size > 0) {
+            typeChoices.forEach(choiceName => {
+                djangoModels.push(`class ${choiceName}_CHOICES(models.TextChoices):\n    ACTIVE = 'active', 'Active'\n    INACTIVE = 'inactive', 'Inactive'\n    PENDING = 'pending', 'Pending'\n`);
+            });
+        }
+
+        for (const [entityName, fields] of Object.entries(entities)) {
+            let modelCode = `class ${entityName}(models.Model):\n`;
+            
+            for (const field of fields) {
+                let djangoField;
+                switch(field.type.toLowerCase()) {
+                    case 'int':
+                        djangoField = 'models.IntegerField()';
+                        break;
+                    case 'decimal':
+                        djangoField = 'models.DecimalField(max_digits=10, decimal_places=2)';
+                        break;
+                    case 'string':
+                        djangoField = 'models.CharField(max_length=255)';
+                        break;
+                    case 'text':
+                        djangoField = 'models.TextField()';
+                        break;
+                    case 'boolean':
+                        djangoField = 'models.BooleanField(default=False)';
+                        break;
+                    case 'timestamp':
+                        djangoField = 'models.DateTimeField(auto_now_add=True)';
+                        break;
+                    case 'datetime':
+                        djangoField = 'models.DateTimeField()';
+                        break;
+                    case 'type':
+                        const choicesClass = `${field.name.toUpperCase()}_CHOICES`;
+                        djangoField = `models.CharField(max_length=20, choices=${choicesClass}.choices, default=${choicesClass}.ACTIVE)`;
+                        break;
+                    default:
+                        djangoField = 'models.CharField(max_length=255)';
+                }
+
+                if (field.key === 'PK') {
+                    djangoField = 'models.AutoField(primary_key=True)';
+                } else if (field.key === 'FK') {
+                    const relatedModel = relationships.find(r => 
+                        (r.to === entityName && r.from === field.name.replace('_id', '')) || 
+                        (r.from === entityName && r.to === field.name.replace('_id', ''))
+                    );
+                    const relatedName = relatedModel ? 
+                        (relatedModel.to === entityName ? relatedModel.from : relatedModel.to) :
+                        field.name.replace('_id', '');
+                    djangoField = `models.ForeignKey('${relatedName}', on_delete=models.CASCADE, related_name='${entityName.toLowerCase()}_set')`;
+                }
+
+                modelCode += `    ${field.name} = ${djangoField}\n`;
+            }
+
+            // Add Meta class
+            modelCode += '\n    class Meta:\n';
+            modelCode += `        verbose_name_plural = "${entityName}s"\n`;
+            modelCode += '        ordering = ["-id"]\n\n';
+
+            // Add __str__ method
+            modelCode += '    def __str__(self):\n';
+            const nameField = fields.find(f => f.name === 'name');
+            if (nameField) {
+                modelCode += '        return self.name\n';
+            } else {
+                modelCode += '        return str(self.id)\n';
+            }
+            
+            djangoModels.push(modelCode);
+        }
+
+        output.innerHTML = '<pre>' + djangoModels.join('\n') + '</pre>';
+        showNotification('Successfully converted to Django models!');
+    } catch (error) {
+        output.innerHTML = `<div class="error">Error converting diagram: ${error.message}</div>`;
+        showNotification('Error converting diagram', 'error');
+    }
+}
+
+// Copy output to clipboard
+async function copyToClipboard() {
+    const output = document.getElementById('output');
+    const codeText = output.textContent;
+    
+    try {
+        await navigator.clipboard.writeText(codeText);
+        showNotification('Copied to clipboard!');
+    } catch (err) {
+        showNotification('Failed to copy to clipboard', 'error');
+    }
+}
+
+// Clear input and preview
+function clearInput() {
+    const input = document.getElementById('input');
+    input.value = '';
+    updatePreview();
+    document.getElementById('output').innerHTML = '';
+}
+
+// Initialize everything when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    initializeEditor();
+    
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        // Ctrl/Cmd + Enter to convert
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            convert();
+        }
+        
+        // Ctrl/Cmd + Shift + C to copy
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
+            e.preventDefault();
+            copyToClipboard();
+        }
+    });
+});
+    </script>
+</body>
+</html>
+
