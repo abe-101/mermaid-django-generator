@@ -18,7 +18,7 @@ Convert Mermaid ER diagrams to Django models instantly
 
 ## 🚀 Usage
 
-1. Visit [https://yourusername.github.io/mermaid-to-django](https://yourusername.github.io/mermaid-to-django)
+1. Visit [https://abe-101.github.io/mermaid-to-django](https://abe-101.github.io/mermaid-to-django)
 2. Paste your Mermaid ER diagram in the left panel
 3. See the live preview update automatically
 4. Get your Django models in the right panel
