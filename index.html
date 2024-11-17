@@ -1,534 +1,313 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Mermaid to Django Models Converter</title>
+    <title>Mermaid to Django Models</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
     <style>
         :root {
             --primary: #4F46E5;
             --primary-dark: #4338CA;
-            --secondary: #6B7280;
-            --success: #059669;
-            --danger: #DC2626;
             --background: #F9FAFB;
             --card: #FFFFFF;
             --border: #E5E7EB;
             --text: #1F2937;
-            --text-secondary: #6B7280;
         }
 
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
         }
 
         body {
-            background-color: var(--background);
+            margin: 0;
+            padding: 20px;
+            background: var(--background);
             color: var(--text);
-            line-height: 1.5;
-            padding: 1rem;
         }
 
         .header {
-            max-width: 1200px;
-            margin: 0 auto 2rem;
             text-align: center;
-            padding: 2rem 1rem;
+            margin-bottom: 2rem;
+            padding: 1rem;
         }
 
         .header h1 {
             font-size: 2.25rem;
-            font-weight: 800;
-            color: var(--text);
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
         }
 
         .header p {
-            color: var(--text-secondary);
-            font-size: 1.125rem;
+            color: var(--text);
+            opacity: 0.8;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: repeat(1, 1fr);
-            gap: 2rem;
-            padding: 1rem;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
         }
 
-        @media (min-width: 768px) {
-            .container {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        .card {
+        .panel {
             background: var(--card);
-            border-radius: 0.75rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        .card-header {
-            padding: 1.25rem;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .card-header h2 {
-            font-size: 1.25rem;
-            font-weight: 600;
+        .panel h2 {
+            margin-top: 0;
+            margin-bottom: 1rem;
             color: var(--text);
-        }
-
-        .card-body {
-            padding: 1.25rem;
-            flex: 1;
-            min-height: 400px;
-            display: flex;
-            flex-direction: column;
         }
 
         textarea {
             width: 100%;
-            height: 100%;
-            min-height: 300px;
-            padding: 1rem;
+            height: 300px;
+            padding: 12px;
             border: 1px solid var(--border);
-            border-radius: 0.5rem;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-            font-size: 0.875rem;
-            line-height: 1.5;
+            border-radius: 8px;
+            font-family: monospace;
+            margin-bottom: 10px;
             resize: vertical;
-            background-color: #FAFAFA;
-            color: var(--text);
         }
 
-        textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
         }
 
-        .preview, .output {
-            flex: 1;
-            overflow: auto;
-            background-color: #FAFAFA;
-            border-radius: 0.5rem;
-            border: 1px solid var(--border);
+        button:hover {
+            background: var(--primary-dark);
         }
 
         .preview {
-            padding: 1rem;
-        }
-
-        .output pre {
-            padding: 1rem;
-            margin: 0;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-            font-size: 0.875rem;
-            line-height: 1.5;
-            overflow-x: auto;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all 150ms ease;
-            gap: 0.5rem;
-        }
-
-        .button-primary {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-        }
-
-        .button-primary:hover {
-            background-color: var(--primary-dark);
-        }
-
-        .button-secondary {
-            background-color: white;
-            color: var(--text);
+            min-height: 200px;
             border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            background: #FAFAFA;
         }
 
-        .button-secondary:hover {
-            background-color: var(--background);
-        }
-
-        .copy-button {
-            background: transparent;
-            border: none;
-            color: var(--secondary);
-            cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 0.375rem;
-            transition: all 150ms ease;
-        }
-
-        .copy-button:hover {
-            background-color: var(--background);
-            color: var(--text);
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 0.9rem;
         }
 
         .error {
-            color: var(--danger);
-            padding: 1rem;
-            border-radius: 0.5rem;
-            background-color: #FEE2E2;
-            border: 1px solid #FCA5A5;
-            margin-top: 1rem;
+            color: #e53e3e;
+            padding: 12px;
+            background: #fff5f5;
+            border-radius: 6px;
+            margin-top: 10px;
         }
 
-        .success {
-            color: var(--success);
-            padding: 1rem;
-            border-radius: 0.5rem;
-            background-color: #ECFDF5;
-            border: 1px solid #6EE7B7;
-            margin-top: 1rem;
+        .help {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 6px;
         }
 
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            background-color: #EEF2FF;
-            color: var(--primary);
+        /* GitHub Corner */
+        .github-corner svg {
+            fill: var(--primary);
+            color: var(--background);
+            position: absolute;
+            top: 0;
+            border: 0;
+            right: 0;
+        }
+        
+        .github-corner:hover .octo-arm {
+            animation: octocat-wave 560ms ease-in-out;
+        }
+        
+        @keyframes octocat-wave {
+            0%, 100% { transform: rotate(0) }
+            20%, 60% { transform: rotate(-25deg) }
+            40%, 80% { transform: rotate(10deg) }
         }
     </style>
 </head>
 <body>
+    <!-- GitHub Corner -->
+    <a href="https://github.com/mermaid-to-django/" class="github-corner" aria-label="View source on GitHub">
+        <svg width="80" height="80" viewBox="0 0 250 250">
+            <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+            <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" class="octo-arm"></path>
+            <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor"></path>
+        </svg>
+    </a>
+
     <header class="header">
         <h1>Mermaid to Django Models</h1>
-        <p>Transform your ER diagrams into production-ready Django models</p>
+        <p>Transform your ER diagrams into Django models with enum support</p>
     </header>
 
     <div class="container">
-        <div class="card">
-            <div class="card-header">
-                <h2>Input Diagram</h2>
-                <span class="badge">Mermaid Syntax</span>
-            </div>
-            <div class="card-body">
-                <textarea id="input" placeholder="Paste your Mermaid ER diagram here...">erDiagram
-    Product {
+        <div class="panel">
+            <h2>Input Diagram</h2>
+            <textarea id="input" placeholder="Paste your Mermaid ER diagram here...">erDiagram
+    Line {
         int id PK
         string name
-        decimal price
-        text description
-        boolean is_active
-        type status
-        timestamp created_at
-        int category_id FK
+        enum line_type "TOP_LINE/BOTTOM_LINE"
+        enum status "ACTIVE/INACTIVE/PENDING"
     }
-    Category {
+    Station {
         int id PK
         string name
-        timestamp updated_at
-    }
-    Product }|--|| Category : belongs_to</textarea>
-                <div class="button-group">
-                    <button onclick="convert()" class="button button-primary">
-                        Convert to Django Models
-                    </button>
-                    <button class="button button-secondary" onclick="clearInput()">
-                        Clear
-                    </button>
-                </div>
-                <div id="preview" class="preview"></div>
-            </div>
+        int line_id FK
+        enum type "EXPRESS/LOCAL"
+    }</textarea>
+            <button onclick="convert()">Convert to Django</button>
+            <div id="preview" class="preview"></div>
         </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h2>Django Models</h2>
-                <button class="copy-button" onclick="copyToClipboard()">
-                    Copy code
-                </button>
-            </div>
-            <div class="card-body">
-                <div id="output" class="output"></div>
+        <div class="panel">
+            <h2>Django Models</h2>
+            <div id="output" class="preview">
+                <pre></pre>
             </div>
         </div>
     </div>
-    <script>
-    // Initialize mermaid with custom theme
-mermaid.initialize({
-    startOnLoad: true,
-    theme: 'neutral',
-    er: {
-        useMaxWidth: true,
-        titleTopMargin: 25,
-        diagramPadding: 20,
-    }
-});
 
-// Utility to show notifications
-function showNotification(message, type = 'success') {
-    const existingNotification = document.querySelector('.notification');
-    if (existingNotification) {
-        existingNotification.remove();
+<script>
+mermaid.initialize({ startOnLoad: true });
+
+const DJANGO_FIELDS = {
+    'int': 'models.IntegerField()',
+    'string': 'models.CharField(max_length=255)',
+    'text': 'models.TextField()',
+    'datetime': 'models.DateTimeField()',
+    'boolean': 'models.BooleanField()',
+    'decimal': 'models.DecimalField(max_digits=10, decimal_places=2)',
+    'date': 'models.DateField()',
+    'email': 'models.EmailField()',
+    'uuid': 'models.UUIDField()',
+    'json': 'models.JSONField()'
+};
+
+function parseField(line) {
+    const enumMatch = line.match(/^\s*enum\s+(\w+)\s+"([^"]+)"/);
+    if (enumMatch) {
+        const [_, name, choices] = enumMatch;
+        return {
+            type: 'enum',
+            name,
+            choices: choices.split('/').map(c => c.trim())
+        };
     }
 
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.textContent = message;
-    notification.style.position = 'fixed';
-    notification.style.top = '1rem';
-    notification.style.right = '1rem';
-    notification.style.padding = '1rem';
-    notification.style.borderRadius = '0.5rem';
-    notification.style.animation = 'fadeIn 0.3s ease';
+    const match = line.match(/^\s*(\w+)\s+(\w+)(?:\s+(PK|FK))?/);
+    if (!match) return null;
     
-    if (type === 'success') {
-        notification.style.backgroundColor = '#ECFDF5';
-        notification.style.color = '#059669';
-    } else {
-        notification.style.backgroundColor = '#FEE2E2';
-        notification.style.color = '#DC2626';
-    }
-
-    document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 3000);
+    const [_, type, name, key] = match;
+    return { type: type.toLowerCase(), name, key };
 }
 
-// Initialize the editor with syntax highlighting
-function initializeEditor() {
-    const textarea = document.getElementById('input');
-    let timeoutId;
-    
-    textarea.addEventListener('input', () => {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(updatePreview, 500);
+function generateChoicesClass(name, choices) {
+    const className = name.toUpperCase() + '_CHOICES';
+    let code = `class ${className}(models.TextChoices):\n`;
+    choices.forEach(choice => {
+        const constName = choice.toUpperCase();
+        code += `    ${constName} = '${choice.toLowerCase()}', '${choice}'\n`;
     });
-
-    // Initial preview
-    updatePreview();
+    return code;
 }
 
-// Update the Mermaid diagram preview
-async function updatePreview() {
+function convert() {
     const input = document.getElementById('input').value;
+    const output = document.getElementById('output').querySelector('pre');
     const preview = document.getElementById('preview');
-    
+
     try {
         preview.innerHTML = '<div class="mermaid">' + input + '</div>';
-        await mermaid.run();
-    } catch (error) {
-        preview.innerHTML = `<div class="error">Error in diagram syntax: ${error.message}</div>`;
-    }
-}
+        mermaid.run();
 
-// Convert Mermaid to Django models
-async function convert() {
-    const input = document.getElementById('input').value;
-    const output = document.getElementById('output');
-
-    try {
-        // Parse the Mermaid syntax
         const lines = input.split('\n');
-        let currentEntity = null;
-        let entities = {};
-        let relationships = [];
+        let currentModel = null;
+        let models = {};
 
-        // Reset error state
-        output.classList.remove('error');
-
-        for (const line of lines) {
-            const trimmedLine = line.trim();
-            
-            // Match entity definitions
-            const entityMatch = trimmedLine.match(/^\s*(\w+)\s*{/);
-            if (entityMatch) {
-                currentEntity = entityMatch[1];
-                entities[currentEntity] = [];
-                continue;
+        lines.forEach(line => {
+            const modelMatch = line.match(/^\s*(\w+)\s*{/);
+            if (modelMatch) {
+                currentModel = modelMatch[1];
+                models[currentModel] = [];
+                return;
             }
 
-            // Match field definitions
-            if (currentEntity && trimmedLine.match(/^\s*\w+/)) {
-                const fieldMatch = trimmedLine.match(/^\s*(\w+)\s+(\w+)(?:\s+(PK|FK))?/);
-                if (fieldMatch) {
-                    entities[currentEntity].push({
-                        type: fieldMatch[1],
-                        name: fieldMatch[2],
-                        key: fieldMatch[3]
-                    });
-                }
+            if (currentModel && line.trim()) {
+                const field = parseField(line);
+                if (field) models[currentModel].push(field);
             }
+        });
 
-            // Match relationships
-            const relationshipMatch = trimmedLine.match(/(\w+)\s*[}|]\|--\|\|?\s*(\w+)/);
-            if (relationshipMatch) {
-                relationships.push({
-                    from: relationshipMatch[1],
-                    to: relationshipMatch[2],
-                    type: trimmedLine.includes('}|--||') ? 'many_to_one' : 'one_to_one'
-                });
-            }
-        }
-
-        // Generate Django models
-        let djangoModels = ['from django.db import models\n'];
+        let djangoCode = 'from django.db import models\n\n';
         
-        // Generate choices for type fields
-        const typeChoices = new Set();
-        for (const [entityName, fields] of Object.entries(entities)) {
+        // Generate choice classes
+        for (const fields of Object.values(models)) {
             fields.forEach(field => {
-                if (field.type.toLowerCase() === 'type') {
-                    typeChoices.add(field.name.toUpperCase());
+                if (field.type === 'enum') {
+                    djangoCode += generateChoicesClass(field.name, field.choices) + '\n';
                 }
             });
         }
-        
-        if (typeChoices.size > 0) {
-            typeChoices.forEach(choiceName => {
-                djangoModels.push(`class ${choiceName}_CHOICES(models.TextChoices):\n    ACTIVE = 'active', 'Active'\n    INACTIVE = 'inactive', 'Inactive'\n    PENDING = 'pending', 'Pending'\n`);
-            });
-        }
 
-        for (const [entityName, fields] of Object.entries(entities)) {
-            let modelCode = `class ${entityName}(models.Model):\n`;
+        // Generate models
+        for (const [modelName, fields] of Object.entries(models)) {
+            djangoCode += `\nclass ${modelName}(models.Model):\n`;
             
-            for (const field of fields) {
-                let djangoField;
-                switch(field.type.toLowerCase()) {
-                    case 'int':
-                        djangoField = 'models.IntegerField()';
-                        break;
-                    case 'decimal':
-                        djangoField = 'models.DecimalField(max_digits=10, decimal_places=2)';
-                        break;
-                    case 'string':
-                        djangoField = 'models.CharField(max_length=255)';
-                        break;
-                    case 'text':
-                        djangoField = 'models.TextField()';
-                        break;
-                    case 'boolean':
-                        djangoField = 'models.BooleanField(default=False)';
-                        break;
-                    case 'timestamp':
-                        djangoField = 'models.DateTimeField(auto_now_add=True)';
-                        break;
-                    case 'datetime':
-                        djangoField = 'models.DateTimeField()';
-                        break;
-                    case 'type':
-                        const choicesClass = `${field.name.toUpperCase()}_CHOICES`;
-                        djangoField = `models.CharField(max_length=20, choices=${choicesClass}.choices, default=${choicesClass}.ACTIVE)`;
-                        break;
-                    default:
-                        djangoField = 'models.CharField(max_length=255)';
-                }
-
-                if (field.key === 'PK') {
-                    djangoField = 'models.AutoField(primary_key=True)';
+            fields.forEach(field => {
+                if (field.type === 'enum') {
+                    const choicesClass = field.name.toUpperCase() + '_CHOICES';
+                    djangoCode += `    ${field.name} = models.CharField(max_length=50, choices=${choicesClass}.choices, default=${choicesClass}.${field.choices[0].toUpperCase()})\n`;
+                } else if (field.key === 'PK') {
+                    djangoCode += `    ${field.name} = models.AutoField(primary_key=True)\n`;
                 } else if (field.key === 'FK') {
-                    const relatedModel = relationships.find(r => 
-                        (r.to === entityName && r.from === field.name.replace('_id', '')) || 
-                        (r.from === entityName && r.to === field.name.replace('_id', ''))
-                    );
-                    const relatedName = relatedModel ? 
-                        (relatedModel.to === entityName ? relatedModel.from : relatedModel.to) :
-                        field.name.replace('_id', '');
-                    djangoField = `models.ForeignKey('${relatedName}', on_delete=models.CASCADE, related_name='${entityName.toLowerCase()}_set')`;
+                    const refModel = field.name.replace('_id', '');
+                    djangoCode += `    ${field.name} = models.ForeignKey('${refModel}', on_delete=models.CASCADE)\n`;
+                } else {
+                    const fieldType = DJANGO_FIELDS[field.type] || 'models.CharField(max_length=255)';
+                    djangoCode += `    ${field.name} = ${fieldType}\n`;
                 }
+            });
 
-                modelCode += `    ${field.name} = ${djangoField}\n`;
-            }
-
-            // Add Meta class
-            modelCode += '\n    class Meta:\n';
-            modelCode += `        verbose_name_plural = "${entityName}s"\n`;
-            modelCode += '        ordering = ["-id"]\n\n';
-
-            // Add __str__ method
-            modelCode += '    def __str__(self):\n';
-            const nameField = fields.find(f => f.name === 'name');
-            if (nameField) {
-                modelCode += '        return self.name\n';
-            } else {
-                modelCode += '        return str(self.id)\n';
-            }
-            
-            djangoModels.push(modelCode);
+            // Add Meta class instead of __str__
+            djangoCode += '\n    class Meta:\n';
+            djangoCode += `        verbose_name = "${modelName}"\n`;
+            djangoCode += `        verbose_name_plural = "${modelName}s"\n`;
+            djangoCode += '        ordering = ["-id"]\n\n';
         }
 
-        output.innerHTML = '<pre>' + djangoModels.join('\n') + '</pre>';
-        showNotification('Successfully converted to Django models!');
+        output.textContent = djangoCode;
     } catch (error) {
-        output.innerHTML = `<div class="error">Error converting diagram: ${error.message}</div>`;
-        showNotification('Error converting diagram', 'error');
+        output.innerHTML = `<div class="error">Error: ${error.message}</div>`;
     }
 }
 
-// Copy output to clipboard
-async function copyToClipboard() {
-    const output = document.getElementById('output');
-    const codeText = output.textContent;
-    
-    try {
-        await navigator.clipboard.writeText(codeText);
-        showNotification('Copied to clipboard!');
-    } catch (err) {
-        showNotification('Failed to copy to clipboard', 'error');
-    }
-}
-
-// Clear input and preview
-function clearInput() {
-    const input = document.getElementById('input');
-    input.value = '';
-    updatePreview();
-    document.getElementById('output').innerHTML = '';
-}
-
-// Initialize everything when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    initializeEditor();
-    
-    // Add keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-        // Ctrl/Cmd + Enter to convert
-        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-            e.preventDefault();
-            convert();
-        }
-        
-        // Ctrl/Cmd + Shift + C to copy
-        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
-            e.preventDefault();
-            copyToClipboard();
-        }
+    const textarea = document.getElementById('input');
+    textarea.addEventListener('input', () => {
+        const preview = document.getElementById('preview');
+        preview.innerHTML = '<div class="mermaid">' + textarea.value + '</div>';
+        mermaid.run();
     });
+    convert();
 });
-    </script>
+</script>
 </body>
 </html>
-
